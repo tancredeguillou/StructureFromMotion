@@ -5,11 +5,15 @@ from impl.util import MakeHomogeneous, HNormalize
 
 # Compute the reprojection error for a single correspondence
 def ReprojectionError(P, point3D, point2D):
-    # TODO
     # Project the 3D point into the image and compare it to the keypoint.
     # Make sure to properly normalize homogeneous coordinates.
+    px = P * point3D
+    px = HNormalize(px)
+    x = MakeHomogeneous(point2D)
+    x = HNormalize(x)
+    error = point2D - px
     
-    return # TODO
+    return error
 
 # Compute the residuals for all correspondences of the image
 def ImageResiduals(P, points2D, points3D):

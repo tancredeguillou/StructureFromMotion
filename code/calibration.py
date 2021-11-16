@@ -28,16 +28,13 @@ def main():
   Plot2DPoints(points2D, image_size, ax2d)
   plt.show(block=False)
 
-  # TODO
   # Normalize 2D and 3D points
-  normalized_points2D, T2D = 
-  normalized_points3D, T3D = 
+  normalized_points2D, T2D = NormalizePoints2D(points2D, image_size)
+  normalized_points3D, T3D = NormalizePoints3D(points3D, image_size)
   
-  # TODO
   # Estimate the projection matrix from normalized correspondences
   P_hat = EstimateProjectionMatrix(normalized_points2D, normalized_points3D)
 
-  # TODO
   # Optimize based on reprojection error
   P_hat_opt = OptimizeProjectionMatrix(P_hat, normalized_points2D, normalized_points3D)
 

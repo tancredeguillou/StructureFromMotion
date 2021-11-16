@@ -1,3 +1,4 @@
+from matplotlib.pyplot import draw
 import numpy as np
 
 from impl.dlt import BuildProjectionConstraintMatrix
@@ -40,16 +41,13 @@ def NormalizePoints2D(points, image_size):
 
 def EstimateProjectionMatrix(points2D, points3D):
   
-  # TODO Build constraint matrix
-  # Hint: Pay attention to the assumed order of the vectorized P matrix. You will need the same order when rehaping the vector to the matrix later
   constraint_matrix = BuildProjectionConstraintMatrix(points2D, points3D)
 
   # Solve for the nullspace
   _, _, vh = np.linalg.svd(constraint_matrix)
   P_vec = vh[-1,:]
 
-  # TODO: Reshape the vector to a matrix (pay attention to the order)
-  P = 
+  P = np.concatenate((P_vec[:3], np.zeros((3,), dtype=int), P_vec[3:]), axis=0)
 
   return P
 
