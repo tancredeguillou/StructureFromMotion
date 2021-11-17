@@ -7,11 +7,11 @@ def BuildProjectionConstraintMatrix(points2D, points3D):
   num_corrs = points2D.shape[0]
   constraint_matrix = np.zeros((num_corrs * 2, 12))
 
-  zeros = np.zeros((3,), dtype=int)
+  zeros = np.zeros((4,), dtype=int)
 
   for i in range(num_corrs):
     x = points2D[i]
-    X = points3D[i]
+    X = np.append(points3D[i], 1)
     first_row = np.concatenate((zeros, -X, x[1] * X), axis=None)
     second_row = np.concatenate((X, zeros, -x[0] * X), axis=None)
     constraint_matrix[2 * i] = first_row

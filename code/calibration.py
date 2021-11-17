@@ -14,11 +14,11 @@ def main():
   # Load the point correspondences
   # Each row is a point. Corresponding points are in the same rows in `points2D` and `points3D`, respectively.
   # 2D points as Nx2 array with [x, y] coordinates
-  points2D = ReadPoints2D('../data')
+  points2D = ReadPoints2D('../code/data')
   # 3D points as Nx3 array with [X, Y, Z] coordinates
-  points3D = ReadPoints3D('../data')
+  points3D = ReadPoints3D('../code/data')
   # Image size as [width, height]
-  image_size = ReadImageSize('../data')
+  image_size = ReadImageSize('../code/data')
 
   # Visualize
   fig = plt.figure()
@@ -30,7 +30,7 @@ def main():
 
   # Normalize 2D and 3D points
   normalized_points2D, T2D = NormalizePoints2D(points2D, image_size)
-  normalized_points3D, T3D = NormalizePoints3D(points3D, image_size)
+  normalized_points3D, T3D = NormalizePoints3D(points3D)
   
   # Estimate the projection matrix from normalized correspondences
   P_hat = EstimateProjectionMatrix(normalized_points2D, normalized_points3D)
@@ -40,11 +40,9 @@ def main():
 
   print(f'Reprojection error after optimization: {np.linalg.norm(ImageResiduals(P_hat_opt, normalized_points2D, normalized_points3D))**2}')
 
-  # TODO
   # Denormalize P
-  P = 
+  P = np.matmul(np.matmul(np.linalg.inv(T2D), P_hat_opt), T3D)
 
-  # TODO
   # Decompose P
   K, R, t = DecomposeP(P)
 

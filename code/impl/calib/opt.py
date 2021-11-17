@@ -7,11 +7,10 @@ from impl.util import MakeHomogeneous, HNormalize
 def ReprojectionError(P, point3D, point2D):
     # Project the 3D point into the image and compare it to the keypoint.
     # Make sure to properly normalize homogeneous coordinates.
-    px = P * point3D
-    px = HNormalize(px)
-    x = MakeHomogeneous(point2D)
-    x = HNormalize(x)
-    error = point2D - px
+    X = MakeHomogeneous(point3D)
+    pX = np.matmul(P, X)
+    pX = HNormalize(pX)
+    error = point2D - pX
     
     return error
 

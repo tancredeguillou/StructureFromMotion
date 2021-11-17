@@ -46,38 +46,41 @@ def EstimateProjectionMatrix(points2D, points3D):
   # Solve for the nullspace
   _, _, vh = np.linalg.svd(constraint_matrix)
   P_vec = vh[-1,:]
-
-  P = np.concatenate((P_vec[:3], np.zeros((3,), dtype=int), P_vec[3:]), axis=0)
+  
+  P = np.reshape(P_vec, (3, 4))
 
   return P
 
 
 def DecomposeP(P):
-  # TODO
   # Decompose P into K, R, and t
 
   # P = K[R|t] = K[R | -RC] = [KR | -KRC]
   # We could decompose KR with a RQ decomposition since K is upper triangular and R is orthogonal
   # To switch this around we set M = KR -> M^(-1) = R^(-1) K^(-1) and can use the QR decomposition on M^(-1)
 
-  # TODO
+  # M = KR is a 3x3 matrix
+  M = P[:,:3]
+  K_inv, R_inv = np.linalg.qr(np.linalg.inv(M))
+
   # Find K and R
-  K =
-  R =
-
-
-  # TODO
+  K_hat = np.linalg.inv(K_inv)
+  R_hat = np.linalg.inv(R_inv)
   # It is possible that a sign was assigned to the wrong matrix during decomposition
   # We need to make sure that det(R) = 1 to have a proper rotation
   # We also want K to have a positive diagonal
+  T = np.diag(np.sign(np.diag(K_hat)))
+  K = np.matmul(K_hat, T)
+  R_hat = np.matmul(np.linalg.inv(T), R_hat)
+  #R = HNormalize(R_hat) if linalg.det(R_hat) == 1 else -HNormalize(R_hat)
+  R = R_hat if np.linalg.det(R_hat) > 0 else -R_hat
+  assert(np.linalg.det(R) > 0)
 
-
-  # TODO
   # Find the camera center C as the nullspace of P
-  C = 
+  _, _, vh = np.linalg.svd(P)
+  C = vh[-1,:]
 
-  # TODO
   # Compute t from R and C
-  t = 
+  t = np.reshape(np.matmul(-R, HNormalize(C)), (3, 1))
 
   return K, R, t
