@@ -14,7 +14,7 @@ def main():
 
   np.set_printoptions(linewidth=10000, edgeitems=100, precision=3)
 
-  data_folder = '../data'
+  data_folder = '../code/data'
   image_names = [
     '0000.png',
     '0001.png',
@@ -43,7 +43,7 @@ def main():
 
   # Visualize images and features
   # You can comment these lines once you verified that the images are loaded correctly
-
+  """
   # Show the images
   PlotImages(images)
 
@@ -55,6 +55,7 @@ def main():
   for image_pair in itertools.combinations(image_names, 2):
     PlotImagePairMatches(images[image_pair[0]], images[image_pair[1]], matches[(image_pair[0], image_pair[1])])
     gc.collect()
+  """
   
   e_im1_name = image_names[init_images[0]]
   e_im2_name = image_names[init_images[1]]
@@ -62,7 +63,6 @@ def main():
   e_im2 = images[e_im2_name]
   e_matches = GetPairMatches(e_im1_name, e_im2_name, matches)
 
-  # TODO Estimate relative pose of first pair
   # Estimate Fundamental matrix
   E = EstimateEssentialMatrix(K, e_im1, e_im2, e_matches)
 
@@ -74,11 +74,22 @@ def main():
   # For each possible relative pose, try to triangulate points.
   # We can assume that the correct solution is the one that gives the most points in front of both cameras
   # Be careful not to set the transformation in the wrong direction
+  most_points = 0
+  best_R = np.eye(3)
+  best_t = 0
+  e_im2.SetPose(np.eye(3), 0)
+  for i in range(possible_relative_poses):
+    (R, t) = possible_relative_poses[i]
+    e_im1.SetPose(R, t)
+    points3D, im1_corrs, im2_corrs = TriangulatePoints(K, e_im1, e_im2, e_matches)
+    if np.shape(points3D)[0] > most_points:
+      most_points = np.shape(points3D)[0]
+
+
 
 
   # TODO
   # Set the image poses in the images (image.SetPose(...))
-
 
   # TODO Triangulate initial points
   points3D, im1_corrs, im2_corrs = TriangulatePoints(K, e_im1, e_im2, e_matches)

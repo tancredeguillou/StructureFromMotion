@@ -11,35 +11,45 @@ from impl.sfm.corrs import GetPairMatches
 
 
 def EstimateEssentialMatrix(K, im1, im2, matches):
-  # TODO
   # Normalize coordinates (to points on the normalized image plane)
+  H_kps1 = MakeHomogeneous(im1.kps, ax=1)
+  H_kps2 = MakeHomogeneous(im2.kps, ax=1)
 
   # These are the keypoints on the normalized image plane (not to be confused with the normalization in the calibration exercise)
-  normalized_kps1 = 
-  normalized_kps2 = 
+  normalized_kps1 = np.zeros(np.shape(H_kps1))
+  normalized_kps2 = np.zeros(np.shape(H_kps2))
+  for idx, kp in enumerate(H_kps1):
+    normalized_kps1[idx] = np.linalg.inv(K) @ kp
+  for idx, kp in enumerate(H_kps2):
+    normalized_kps2[idx] = np.linalg.inv(K) @ kp
 
-  # TODO
   # Assemble constraint matrix
   constraint_matrix = np.zeros((matches.shape[0], 9))
 
   for i in range(matches.shape[0]):
-    # TODO
     # Add the constraints
+    kp_1 = normalized_kps1[matches[i][0]]
+    kp_2 = normalized_kps2[matches[i][1]]
+    x1 = kp_1[0]
+    y1 = kp_1[1]
+    x2 = kp_2[0]
+    y2 = kp_2[1]
+    constraint_matrix[i] = np.array([x1*x2, x1*y2, x1, y1*x2, y1*y2, y1, x2, y2, 1])
 
   
   # Solve for the nullspace of the constraint matrix
   _, _, vh = np.linalg.svd(constraint_matrix)
   vectorized_E_hat = vh[-1,:]
 
-  # TODO
   # Reshape the vectorized matrix to it's proper shape again
-  E_hat = 
+  E_hat = np.reshape(vectorized_E_hat, (3, 3))
 
   # TODO
   # We need to fulfill the internal constraints of E
   # The first two singular values need to be equal, the third one zero.
-  # Since E is up to scale, we can choose the two equal singluar values arbitrarily
-  E = 
+  # Since E is up to scale, we can choose the two equal singular values arbitrarily
+  u, _, v = np.linalg.svd(E_hat)
+  E = u @ np.diag([1, 1, 0]) @ v
 
   # This is just a quick test that should tell you if your estimated matrix is not correct
   # It might fail if you estimated E in the other direction (i.e. kp2' * E * kp1)
@@ -59,6 +69,7 @@ def DecomposeEssentialMatrix(E):
 
   # Determine the translation up to sign
   t_hat = u[:,-1]
+  print(np.shape(t_hat))
 
   W = np.array([
     [0, -1, 0],
@@ -131,12 +142,27 @@ def TriangulatePoints(K, im1, im2, matches):
   im1_corrs = new_matches[:,0]
   im2_corrs = new_matches[:,1]
 
-  # TODO
   # Filter points behind the cameras by transforming them into each camera space and checking the depth (Z)
   # Make sure to also remove the corresponding rows in `im1_corrs` and `im2_corrs`
-  points3D = 
-  im1_corrs = 
-  im2_corrs =
+  cam1 = np.zeros(np.shape(points3D))
+  cam2 = np.zeros(np.shape(points3D))
+  h_points_3D = MakeHomogeneous(points3D, ax=1)
+  for i in range(np.shape(h_points_3D)[0]):
+    cam1[i] = P1 @ h_points_3D[i]
+    cam2[i] = P2 @ h_points_3D[i]
+  
+  temp1 = cam1[:, -1]
+  mask1 = temp1 > 0
+  temp2 = cam2[:, -1]
+  mask2 = temp2 > 0
+
+  #filtered cam1 & cam2
+  cam1 = cam1[mask1]
+  cam2 = cam2[mask2]
+
+  points3D = points3D[mask1 or mask2]
+  im1_corrs = im1_corrs[mask1]
+  im2_corrs = im2_corrs[mask2]
 
   return points3D, im1_corrs, im2_corrs
 
@@ -146,7 +172,7 @@ def EstimateImagePose(points2D, points3D, K):
   # We use points in the normalized image plane.
   # This removes the 'K' factor from the projection matrix.
   # We don't normalize the 3D points here to keep the code simpler.
-  normalized_points2D = 
+  normalized_points2D = None
 
   constraint_matrix = BuildProjectionConstraintMatrix(normalized_points2D, points3D)
 
