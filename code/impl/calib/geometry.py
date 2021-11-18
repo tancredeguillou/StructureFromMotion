@@ -1,5 +1,6 @@
 from matplotlib.pyplot import draw
 import numpy as np
+import scipy as sp
 
 from impl.dlt import BuildProjectionConstraintMatrix
 from impl.util import HNormalize
@@ -61,7 +62,7 @@ def DecomposeP(P):
 
   # M = KR is a 3x3 matrix
   M = P[:,:3]
-  K_inv, R_inv = np.linalg.qr(np.linalg.inv(M))
+  R_inv, K_inv = np.linalg.qr(np.linalg.inv(M))
 
   # Find K and R
   K_hat = np.linalg.inv(K_inv)
@@ -70,17 +71,16 @@ def DecomposeP(P):
   # We need to make sure that det(R) = 1 to have a proper rotation
   # We also want K to have a positive diagonal
   T = np.diag(np.sign(np.diag(K_hat)))
-  K = np.matmul(K_hat, T)
-  R_hat = np.matmul(np.linalg.inv(T), R_hat)
+  K = K_hat @ T
+  R_hat = np.linalg.inv(T) @ R_hat
   #R = HNormalize(R_hat) if linalg.det(R_hat) == 1 else -HNormalize(R_hat)
   R = R_hat if np.linalg.det(R_hat) > 0 else -R_hat
   assert(np.linalg.det(R) > 0)
 
   # Find the camera center C as the nullspace of P
-  _, _, vh = np.linalg.svd(P)
-  C = vh[-1,:]
+  C = HNormalize(sp.linalg.null_space(P))
 
   # Compute t from R and C
-  t = np.reshape(np.matmul(-R, HNormalize(C)), (3, 1))
+  t = -(R @ C)
 
   return K, R, t

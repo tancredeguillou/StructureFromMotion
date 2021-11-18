@@ -41,7 +41,7 @@ def main():
   print(f'Reprojection error after optimization: {np.linalg.norm(ImageResiduals(P_hat_opt, normalized_points2D, normalized_points3D))**2}')
 
   # Denormalize P
-  P = np.matmul(np.matmul(np.linalg.inv(T2D), P_hat_opt), T3D)
+  P = (np.linalg.inv(T2D) @ P_hat_opt) @ T3D
 
   # Decompose P
   K, R, t = DecomposeP(P)

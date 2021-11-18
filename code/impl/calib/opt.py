@@ -8,8 +8,7 @@ def ReprojectionError(P, point3D, point2D):
     # Project the 3D point into the image and compare it to the keypoint.
     # Make sure to properly normalize homogeneous coordinates.
     X = MakeHomogeneous(point3D)
-    pX = np.matmul(P, X)
-    pX = HNormalize(pX)
+    pX = HNormalize(P @ X)
     error = point2D - pX
     
     return error
