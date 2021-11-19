@@ -197,25 +197,33 @@ def EstimateImagePose(points2D, points3D, K):
   return R, t
 
 def TriangulateImage(K, image_name, images, registered_images, matches):
-
   # Loop over all registered images and triangulate new points with the new image.
   # Make sure to keep track of all new 2D-3D correspondences, also for the registered images
   image = images[image_name]
   points3D = np.zeros((0,3))
   # You can save the correspondences for each image in a dict and refer to the `local` new point indices here.
   # Afterwards you just add the index offset before adding the correspondences to the images.
-  image_corrs = np.array([])
   corrs = {}
-  
-  for idx, registered_image_name in enumerate(registered_images):
-    registered_image = images[registered_image_name]
-    pair_matches = GetPairMatches(image_name, registered_image_name, matches)
-    t_points3D, im1_corrs, im2_corrs = TriangulatePoints(K, image, registered_image, pair_matches)
-    points3D = np.append(points3D, t_points3D, 0)
-    image_corrs = np.union1d(image_corrs, im1_corrs)
-    corrs[registered_image_name] = im2_corrs
 
-  corrs[image_name] = image_corrs
+  for registered_image_name in registered_images:
+    registered_image = images[registered_image_name]
+    pair_matches = GetPairMatches(registered_image_name, image_name, matches)
+    t_points3D, im1_corrs, im2_corrs = TriangulatePoints(K, registered_image, image, pair_matches)
+    points3D = np.append(points3D, t_points3D, 0)
+
+    im1_dict = {}
+    im2_dict = {}
+
+    points3D_shape = np.shape(points3D)[0]
+    t_points3D_shape = np.shape(t_points3D)[0]
+    start_index = points3D_shape - t_points3D_shape
+    stop_index = points3D_shape
+    indexes = np.arange(start_index, stop_index)
+    for i in range(t_points3D_shape):
+      im1_dict[im1_corrs[i]] = indexes[i]
+      im2_dict[im2_corrs[i]] = indexes[i]
+
+    corrs[image_name] = im2_dict
+    corrs[registered_image_name] = im1_dict
 
   return points3D, corrs
-  

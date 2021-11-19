@@ -39,7 +39,7 @@ def main():
 
   K = ReadKMatrix(data_folder)
 
-  init_images = [3, 4]
+  init_images = [5, 6]
 
   # Visualize images and features
   # You can comment these lines once you verified that the images are loaded correctly
@@ -76,10 +76,10 @@ def main():
   most_points = 0
   best_R = np.eye(3)
   best_t = np.array([0, 0, 0])
-  e_im1.SetPose(best_R, best_t)
+  e_im2.SetPose(best_R, best_t)
   for _, r_pose in enumerate(possible_relative_poses):
     (R, t) = r_pose
-    e_im2.SetPose(R, t)
+    e_im1.SetPose(R, t)
     points3D, _, _ = TriangulatePoints(K, e_im1, e_im2, e_matches)
     if np.shape(points3D)[0] > most_points:
       most_points = np.shape(points3D)[0]
@@ -87,7 +87,7 @@ def main():
       best_t = t
   
   # Set the image poses in the images (image.SetPose(...))
-  e_im2.SetPose(best_R, best_t)
+  e_im1.SetPose(best_R, best_t)
 
   # Triangulate initial points
   points3D, im1_corrs, im2_corrs = TriangulatePoints(K, e_im1, e_im2, e_matches)
@@ -129,12 +129,10 @@ def main():
       # Triangulate new points wth all previously registered images
       image_points3D, corrs = TriangulateImage(K, image_name, images, registered_images, matches)
 
-      # TODO
       # Update the 3D points and image correspondences
       points3D, images = UpdateReconstructionState(image_points3D, corrs, points3D, images)
 
       registered_images.append(image_name)
-
 
   # Visualize
   fig = plt.figure()
