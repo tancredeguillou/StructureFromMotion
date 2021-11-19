@@ -70,28 +70,26 @@ def main():
   # This gives four possible solutions and we need to check which one is the correct one in the next step
   possible_relative_poses = DecomposeEssentialMatrix(E)
 
-  # TODO
   # For each possible relative pose, try to triangulate points.
   # We can assume that the correct solution is the one that gives the most points in front of both cameras
   # Be careful not to set the transformation in the wrong direction
   most_points = 0
   best_R = np.eye(3)
-  best_t = 0
-  e_im2.SetPose(np.eye(3), 0)
-  for i in range(possible_relative_poses):
-    (R, t) = possible_relative_poses[i]
-    e_im1.SetPose(R, t)
-    points3D, im1_corrs, im2_corrs = TriangulatePoints(K, e_im1, e_im2, e_matches)
+  best_t = np.array([0, 0, 0])
+  e_im1.SetPose(best_R, best_t)
+  for _, r_pose in enumerate(possible_relative_poses):
+    (R, t) = r_pose
+    e_im2.SetPose(R, t)
+    points3D, _, _ = TriangulatePoints(K, e_im1, e_im2, e_matches)
     if np.shape(points3D)[0] > most_points:
       most_points = np.shape(points3D)[0]
-
-
-
-
-  # TODO
+      best_R = R
+      best_t = t
+  
   # Set the image poses in the images (image.SetPose(...))
+  e_im2.SetPose(best_R, best_t)
 
-  # TODO Triangulate initial points
+  # Triangulate initial points
   points3D, im1_corrs, im2_corrs = TriangulatePoints(K, e_im1, e_im2, e_matches)
 
   # Add the new 2D-3D correspondences to the images
@@ -128,7 +126,6 @@ def main():
       images[image_name].SetPose(R, t)
       images[image_name].Add3DCorrs(image_kp_idxs, point3D_idxs)
 
-      # TODO
       # Triangulate new points wth all previously registered images
       image_points3D, corrs = TriangulateImage(K, image_name, images, registered_images, matches)
 
